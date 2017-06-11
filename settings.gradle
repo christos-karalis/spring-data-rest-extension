@@ -1,0 +1,3 @@
+rootProject.name = 'extension-root'
+include 'extension-example', 'extension'
+
