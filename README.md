@@ -1,4 +1,4 @@
-# Custom Spring Data Rest Extension
+# Custom Spring Data Rest Extension [![Build Status](https://travis-ci.org/christos-karalis/spring-data-rest-extension.svg?branch=master)](https://travis-ci.org/christos-karalis/spring-data-rest-extension)
 
 It is an extension to the functionality of Spring Data Rest (currently only working with Spring Data JPA). 
 It provides rest services to implement advanced searches and saves by the provided entity classes and generated 
