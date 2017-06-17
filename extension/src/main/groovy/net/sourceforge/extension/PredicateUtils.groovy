@@ -122,31 +122,30 @@ public class PredicateUtils {
         return (joins.size()>0&&!(idActualType in Base64Convertable)) ? (JPAQueryBase) query.distinct().where() : query
     }
 
-    private void addEntityJoinAndParse(EntityPath entityPath, Map<Path, Path> joins, List<BooleanExpression> expressions, Map.Entry<String, Object> operand, MetaProperty property) {
+    private void addEntityJoinAndParse(EntityPath entityPath, Map<Path, Path> joins, List<BooleanExpression> expressions, Map nestedMap, MetaProperty property) {
         Class subEntityPathClass = property.getType()
         EntityPath subEntityPath = (EntityPath) subEntityPathClass.newInstance(property.getName())
         joins[subEntityPath] = (Path) property.getProperty(entityPath)
-        parseMapForJoins(subEntityPath, (Map) operand.getValue(), joins, expressions)
+        parseMapForJoins(subEntityPath, nestedMap, joins, expressions)
     }
 
-    private void addCollectionJoinAndParse(EntityPath entityPath, Map<Path, Path> joins, List<BooleanExpression> expressions, Map.Entry<String, Object> operand, MetaProperty property) {
+    private void addCollectionJoinAndParse(EntityPath entityPath, Map<Path, Path> joins, List<BooleanExpression> expressions, Map nestedMap, MetaProperty property) {
         //TODO a dirty way to get the Type of sub entityPath
         Class subEntityPathClass = property.getProperty(entityPath).any().getClass()
         EntityPath subEntityPath = (EntityPath) subEntityPathClass.newInstance(property.getName())
         if (property.getType() in CollectionPathBase) {
             joins[subEntityPath] = (Path) property.getProperty(entityPath)
         }
-        parseMapForJoins(subEntityPath, (Map) operand.getValue(), joins, expressions);
+        parseMapForJoins(subEntityPath, nestedMap, joins, expressions);
     }
 
 
     private void parseMapForJoins(EntityPath entityPath, Map<String, Object> searchMap, Map<Path, Path> joins, List<BooleanExpression> expressions) {
-        for (Map.Entry<String, Object> operand : searchMap.entrySet()) {
-            def property = entityPath.hasProperty(operand.getKey())
+        searchMap.each { key, value ->
+            def property = entityPath.hasProperty(key)
             if (property) {
                 BooleanExpression expression
-                if (operand.getValue() instanceof String && StringUtils.isNotBlank(operand.getValue())) {
-                    String value = (String) operand.getValue()
+                if (value instanceof String && StringUtils.isNotBlank(value)) {
                     ((property.getType() in StringPath
                             && (expression = ((StringPath) property.getProperty(entityPath)).trim().containsIgnoreCase(value.trim()))) ||
                     (property.getType() in BooleanPath
@@ -161,56 +160,52 @@ public class PredicateUtils {
                     if (expression) {
                         expressions << expression
                     }
-                } else if (operand.getValue() in Number && property.getType() in NumberPath)  {
-                    (expression = generateExpression((NumberPath) property.getProperty(entityPath), (Number) operand.getValue())) && expressions << expression
-                } else if (operand.getValue() in Number && property.getType().getGenericSuperclass() instanceof ParameterizedType &&
+                } else if (value in Number && property.getType() in NumberPath)  {
+                    (expression = generateExpression((NumberPath) property.getProperty(entityPath), (Number) value)) && expressions << expression
+                } else if (value in Number && property.getType().getGenericSuperclass() instanceof ParameterizedType &&
                         property.getType() in EntityPathBase)  {
-                    (expression = matchToEntityId(entityPath, property, ((Number) operand.getValue()).toString())) && expressions << expression
-                } else if (operand.getValue() instanceof Map) {
+                    (expression = matchToEntityId(entityPath, property, ((Number) value).toString())) && expressions << expression
+                } else if (value instanceof Map) {
                     if (property.getProperty(entityPath) in CollectionPathBase) {
-                        addCollectionJoinAndParse(entityPath, joins, expressions, operand, property)
+                        addCollectionJoinAndParse(entityPath, joins, expressions, value, property)
                     } else if (property.getType() in EntityPathBase) {
-                        addEntityJoinAndParse(entityPath, joins, expressions, operand, property)
+                        addEntityJoinAndParse(entityPath, joins, expressions, value, property)
                     } else if (property.getProperty(entityPath) instanceof NumberPath) {
-                        (expression=generateExpression((NumberPath) property.getProperty(entityPath), operand.getValue())) && expressions << expression
+                        (expression=generateExpression((NumberPath) property.getProperty(entityPath), value)) && expressions << expression
                     } else if (property.getProperty(entityPath) instanceof DatePath) {
-                        (expression = generateExpression((DatePath) property.getProperty(entityPath), operand.getValue())) && expressions << expression
+                        (expression = generateExpression((DatePath) property.getProperty(entityPath), value)) && expressions << expression
                     } else if (property.getProperty(entityPath) instanceof DateTimePath) {
-                        (expression = generateExpression((DateTimePath) property.getProperty(entityPath), operand.getValue())) && expressions << expression
+                        (expression = generateExpression((DateTimePath) property.getProperty(entityPath), value)) && expressions << expression
                     }
-                } else if (operand.getValue() instanceof Collection) {
-                    Collection values = (Collection) operand.getValue();
+                } else if (value instanceof Collection) {
                     if (property.getType().getGenericSuperclass() instanceof ParameterizedType &&
                             property.getType() in EntityPathBase) {
-                        if ((expression = matchToEntityId(entityPath, property, values))!=null) {
+                        if ((expression = matchToEntityId(entityPath, property, value))!=null) {
                             expressions << expression
                         }
                     } else if (property.getProperty(entityPath) instanceof SimpleExpression) {
-                        Collection<Object> matchedValues = new ArrayList<Object>();
                         boolean addedNull = false;
-                        for (value in values) {
-                            value && (matchedValues << value) || (addedNull = true)
-                        }
+                        def matchedValues = value.findAll{ it -> if (value) { value } else { addedNull = true; false} }
                         expressions.add(((SimpleExpression) property.getProperty(entityPath)).in(matchedValues).or(addedNull?((SimpleExpression) property.getProperty(entityPath)).isNull():null))
                     }
-                } else if (operand.getValue() instanceof Boolean) {
-                    property.getType() in BooleanPath && expressions << ((BooleanPath) property.getProperty(entityPath)).eq((Boolean) operand.getValue())
+                } else if (value instanceof Boolean) {
+                    property.getType() in BooleanPath && expressions << ((BooleanPath) property.getProperty(entityPath)).eq((Boolean) value)
                 }
-            } else if (operand.getKey() in [Constants.CURRENT_DATE_ACTIVE] && operand.getValue() instanceof Map) {
-                TemporalExpression from = getDatePath(entityPath, (String) ((Map) operand.getValue()).get(Constants.DATE_FROM));
-                TemporalExpression to = getDatePath(entityPath, (String) ((Map) operand.getValue()).get(Constants.DATE_TO));
+            } else if (key in [Constants.CURRENT_DATE_ACTIVE] && value instanceof Map) {
+                TemporalExpression from = getDatePath(entityPath, (String) ((Map) value).get(Constants.DATE_FROM));
+                TemporalExpression to = getDatePath(entityPath, (String) ((Map) value).get(Constants.DATE_TO));
                 Date current = new Date();
                 if (from!=null && to!=null) {
                     def and = from.before(current).and(to.after(current).or(to.isNull()))
                     expressions.add(and)
                 }
-            } else if (operand.getKey() in [Constants.OR, Constants.AND] && operand.getValue() instanceof Map) {
+            } else if (key in [Constants.OR, Constants.AND] && value instanceof Map) {
                 List<BooleanExpression> orExpressions = new ArrayList<BooleanExpression>();
-                parseMapForJoins(entityPath, (Map<String, Object>) operand.getValue(), joins, orExpressions);
+                parseMapForJoins(entityPath, (Map<String, Object>) value, joins, orExpressions);
                 if (!orExpressions.isEmpty()) {
                     BooleanExpression expression = orExpressions.get(0);
                     for (int i = 1; i < orExpressions.size(); i++) {
-                        if (operand.getKey().equals(Constants.OR)) {
+                        if (key.equals(Constants.OR)) {
                             expression = expression.or(orExpressions.get(i));
                         } else {
                             expression = expression.and(orExpressions.get(i));
@@ -218,32 +213,30 @@ public class PredicateUtils {
                     }
                     expressions << expression
                 }
-            } else if (operand.getKey() in [Constants.OR, Constants.AND] && operand.getValue() instanceof List) {
+            } else if (key in [Constants.OR, Constants.AND] && value instanceof List) {
                 BooleanExpression totalExpressions = null
-                for (Map<String, Object> value : (List<Map<String, Object>>) operand.getValue()) {
+                value.each { Map<String, Object> it ->
                     List<BooleanExpression> orExpressions = new ArrayList<>();
-                    parseMapForJoins(entityPath, value, joins, orExpressions);
+                    parseMapForJoins(entityPath, it, joins, orExpressions);
                     if (!orExpressions.isEmpty()) {
                         int initial = 0;
                         if (totalExpressions==null) {
                             totalExpressions = orExpressions.get(initial++);
                         }
                         for (int i = initial; i < orExpressions.size(); i++) {
-                            if (operand.getKey().equals(Constants.OR)) {
-                                totalExpressions = totalExpressions.or(orExpressions.get(i));
-                            } else {
-                                totalExpressions = totalExpressions.and(orExpressions.get(i));
-                            }
+                            totalExpressions = Constants.OR.equals(key)?
+                                    totalExpressions.or(orExpressions.get(i)):
+                                    totalExpressions.and(orExpressions.get(i))
                         }
                     }
                 }
                 expressions << totalExpressions
-            } else if ( operand.getKey() in [Constants.ISNULL, Constants.ISNOTNULL]
-                    && operand.getValue() instanceof String) {
-                def valueProperty = entityPath.hasProperty(operand.getValue())
+            } else if ( key in [Constants.ISNULL, Constants.ISNOTNULL]
+                    && value instanceof String) {
+                def valueProperty = entityPath.hasProperty(value)
                 if (valueProperty) {
                     def nullableField = valueProperty.getProperty(entityPath);
-                    if (operand.getKey() in [Constants.ISNULL]) {
+                    if (key in [Constants.ISNULL]) {
                         expressions << ((SimpleExpression) nullableField).isNull()
                     } else {
                         expressions << (((SimpleExpression) nullableField)).isNotNull()
