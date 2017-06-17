@@ -41,4 +41,4 @@ Examples of search json:
 }
 ```
     
-More details on [Wiki](./wiki)
+More details on [Wiki](../../wiki)
