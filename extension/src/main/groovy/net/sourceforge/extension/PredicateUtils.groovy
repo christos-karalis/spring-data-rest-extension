@@ -1,6 +1,7 @@
 package net.sourceforge.extension
 
 import org.apache.commons.lang3.BooleanUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -144,16 +145,16 @@ public class PredicateUtils {
             def property = entityPath.hasProperty(operand.getKey())
             if (property) {
                 BooleanExpression expression
-                if (operand.getValue() instanceof String) {
+                if (operand.getValue() instanceof String && StringUtils.isNotBlank(operand.getValue())) {
                     String value = (String) operand.getValue()
                     ((property.getType() in StringPath
                             && (expression = ((StringPath) property.getProperty(entityPath)).trim().containsIgnoreCase(value.trim()))) ||
                     (property.getType() in BooleanPath
-                            && (expression = generateExpression(property.getProperty(entityPath), value))) ||
+                            && (expression = generateExpression(property.getProperty(entityPath) as BooleanPath, value))) ||
                     (property.getType() in NumberPath
-                            && (expression = generateExpression(property.getProperty(entityPath), value))) ||
+                            && (expression = generateExpression(property.getProperty(entityPath) as NumberPath, value))) ||
                     (property.getType() in DatePath
-                            && (expression = generateExpression(property.getProperty(entityPath), value))) ||
+                            && (expression = generateExpression(property.getProperty(entityPath) as DatePath, value))) ||
                     (property.getType().getGenericSuperclass() in ParameterizedType
                             && property.getType() in EntityPathBase
                             && (expression=matchToEntityId(entityPath, property, value))))

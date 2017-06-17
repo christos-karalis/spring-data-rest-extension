@@ -1,9 +1,6 @@
 package net.sourceforge.extension.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.querydsl.core.types.EntityPath;
-import com.querydsl.core.types.dsl.PathBuilder;
-import com.querydsl.core.types.dsl.PathBuilderFactory;
 import com.querydsl.jpa.JPAQueryBase;
 import com.querydsl.jpa.JPQLQuery;
 import net.sourceforge.extension.AdvancedSearch;
@@ -27,10 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.persistence.EntityManager;
-import javax.xml.bind.JAXBException;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 

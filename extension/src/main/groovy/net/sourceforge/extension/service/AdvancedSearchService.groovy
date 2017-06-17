@@ -6,13 +6,11 @@ import com.querydsl.core.types.Path;
 import com.querydsl.core.types.dsl.SimpleExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.jpa.impl.JPAUpdateClause;
-import groovy.lang.GroovySystem;
 import net.sourceforge.extension.Association;
 import net.sourceforge.extension.controller.AdvancedPostController;
 import org.codehaus.groovy.runtime.metaclass.MetaClassRegistryImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
@@ -35,14 +33,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.persistence.EntityManager;
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class AdvancedSearchService {
@@ -80,46 +72,29 @@ public class AdvancedSearchService {
      * @param source must not be {@literal null}.
      */
     private void addLocationHeader(HttpHeaders headers, PersistentEntityResourceAssembler assembler, Object source) {
-
         String selfLink = assembler.getSelfLinkFor(source).getHref();
         headers.setLocation(new UriTemplate(selfLink).expand());
     }
 
     @Transactional
     public Object updateObject(RootResourceInformation resourceInformation, @RequestBody Map<String, Object> payload, @PathVariable("repository") String repository, @BackendId Serializable id, Class domainPredicateClass, EntityPath entityPath) throws NoSuchFieldException, IllegalAccessException, URISyntaxException {
-        Object info = null;
-//        if (payload!=null && payload.get(repository)!=null) {
-//            Object obj = objectMapper.convertValue(payload.get(repository), resourceInformation.getDomainType());
-//        }
-
         Field declaredFieldId = domainPredicateClass
                 .getDeclaredField(resourceInformation.getPersistentEntity().getIdProperty().getName());
-
         JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
         SimpleExpression tSimpleExpression = (SimpleExpression<Path>) declaredFieldId.get(entityPath);
 
         JPAUpdateClause update = jpaQueryFactory.update(entityPath).where(tSimpleExpression.eq(conversionService.convert(id, resourceInformation.getPersistentEntity().getIdProperty().getType())));
 
-        if (payload.get(repository)!=null) {
-//            Object updated = objectMapper.convertValue(payload.get(repository), resourceInformation.getDomainType());
-            for (Map.Entry<String, Object> entry : ((Map<String, Object>) payload.get(repository)).entrySet() ) {
-                Class type = ((MetaClassRegistryImpl) GroovySystem.getMetaClassRegistry()).getMetaClass(resourceInformation.getDomainType()).getMetaProperty(entry.getKey()).getType();
-                Path property = (Path) GroovySystem.getMetaClassRegistry().getMetaClass(domainPredicateClass)
-                        .getProperty(entityPath, entry.getKey());
-                Object val;
-                if (property instanceof EntityPath
-                        && entry.getValue() instanceof String) {
-                    val = conversionService.convert(
-                            ((String) entry.getValue()).startsWith("http")?new URI((String) entry.getValue()):entry.getValue(), type);
-                } else {
-                    val = entry.getValue();
-                }
-                update.set(property, val);
-            }
-            long executed = update.execute();
+        payload.get(repository).each { key, value ->
+            Class type = resourceInformation.getDomainType().getMetaClass().getMetaProperty(key).getType()
+            Path property = entityPath.hasProperty(key).getProperty(entityPath)
+            Object val = (property instanceof EntityPath && value instanceof String)?
+                    conversionService.convert(((String) value).startsWith("http")?new URI((String) value):value, type):value
+            update.set(property, val)
+
         }
-        info = resourceInformation.getInvoker().invokeFindOne(id);
-        return info;
+        long executed = update.execute()
+        return resourceInformation.getInvoker().invokeFindOne(id)
     }
 
 
@@ -130,30 +105,27 @@ public class AdvancedSearchService {
 
         em.persist(obj);
 
-        for (Map.Entry<String, Object> entry : payload.entrySet()) {
-            if (!entry.getKey().equals(repository) && !entry.getKey().equals("files")) {
-                Association association = associationMap.get(entry.getKey());
-                if (association == null) {
-                    association = AdvancedPostController.getAssociation(domainType, entry.getKey());
-                    associationMap.put(entry.getKey(), association);
-                }
-                if (entry.getValue() instanceof ArrayList) {
-                    for (Object object : (ArrayList) entry.getValue()) {
-                        Object newEntity = objectMapper.convertValue(object, association.getDomainType());
-                        GroovySystem.getMetaClassRegistry().getMetaClass(association.getDomainType())
-                                .setProperty(newEntity, association.getParentEntityProperty(), obj);
-                        publisher.publishEvent(new BeforeCreateEvent(newEntity));
-                        invokerFactory.getInvokerFor((Class<Object>) association.getDomainType()).invokeSave(newEntity);
-                        publisher.publishEvent(new AfterCreateEvent(newEntity));
-                    }
-                }
+        payload.findAll { key,value->(!key.equals(repository) && !key.equals("files"))}
+                .each { key, value ->
+            Association association = associationMap.get(key);
+            if (association == null) {
+                association = AdvancedPostController.getAssociation(domainType, key);
+                associationMap.put(key, association);
+            }
+            value.each {
+                Object newEntity = objectMapper.convertValue(it, association.getDomainType())
+                association.getDomainType().getMetaClass()
+                        .setProperty(newEntity, association.getParentEntityProperty(), obj)
+                publisher.publishEvent(new BeforeCreateEvent(newEntity))
+                invokerFactory.getInvokerFor((Class<Object>) association.getDomainType()).invokeSave(newEntity)
+                publisher.publishEvent(new AfterCreateEvent(newEntity))
             }
         }
 
-        HttpHeaders headers = new HttpHeaders();
-        addLocationHeader(headers, assembler, obj);
+        HttpHeaders headers = new HttpHeaders()
+        addLocationHeader(headers, assembler, obj)
 
-        PersistentEntityResource resource = false ? assembler.toFullResource(obj) : null;
-        return ControllerUtils.toResponseEntity(HttpStatus.CREATED, headers, resource);
+        PersistentEntityResource resource = false ? assembler.toFullResource(obj) : null
+        return ControllerUtils.toResponseEntity(HttpStatus.CREATED, headers, resource)
     }
 }

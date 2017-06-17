@@ -67,6 +67,7 @@ public class AdvancedPostControllerTest extends AbstractControllerTest {
 
         post = getAndRespond("/application/1/orderLines");
         post.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
+                .andExpect(MockMvcResultMatchers.jsonPath("_embedded.orderLines", Matchers.hasSize(1)))
                 .andExpect(MockMvcResultMatchers.jsonPath("_embedded.orderLines[0].quantity", Matchers.is(2)))
                 .andExpect(MockMvcResultMatchers.jsonPath("_embedded.orderLines[0]._links.service.href", Matchers.is("http://localhost/orderLine/1/service")));
 
@@ -79,6 +80,7 @@ public class AdvancedPostControllerTest extends AbstractControllerTest {
 
         post = getAndRespond("/application/1/orderLines");
         post.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
+                .andExpect(MockMvcResultMatchers.jsonPath("_embedded.orderLines", Matchers.hasSize(1)))
                 .andExpect(MockMvcResultMatchers.jsonPath("_embedded.orderLines[0].quantity", Matchers.is(3)))
                 .andExpect(MockMvcResultMatchers.jsonPath("_embedded.orderLines[0]._links.service.href", Matchers.is("http://localhost/orderLine/2/service")));
 
