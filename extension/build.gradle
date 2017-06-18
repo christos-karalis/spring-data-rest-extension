@@ -62,10 +62,9 @@ clean {
     delete sourceSets.generated.java.srcDirs
 }
 
-
 task generateQueryDSL(type: org.gradle.api.tasks.compile.JavaCompile, group: 'build', description: 'Generates the QueryDSL query types') {
     source = sourceSets.test.java
-    classpath = configurations.compile + configurations.querydslapt + configurations.testCompile
+    classpath = configurations.compile + configurations.querydslapt + configurations.testCompile + sourceSets.main.output
     options.compilerArgs = [
             "-proc:only",
             "-processor", "com.querydsl.apt.jpa.JPAAnnotationProcessor"
@@ -73,16 +72,9 @@ task generateQueryDSL(type: org.gradle.api.tasks.compile.JavaCompile, group: 'bu
     destinationDir = sourceSets.generated.java.srcDirs.iterator().next()
 }
 
-//compileJava {
-//    dependsOn generateQueryDSL
-//    source generateQueryDSL.destinationDir
-//}
-
-//compileGeneratedJava {
-//    dependsOn generateQueryDSL
-//    options.warnings = false
-//    classpath += sourceSets.main.runtimeClasspath
-//}
+check {
+    dependsOn generateQueryDSL
+}
 
 compileTestJava {
     source += sourceSets.generated.java

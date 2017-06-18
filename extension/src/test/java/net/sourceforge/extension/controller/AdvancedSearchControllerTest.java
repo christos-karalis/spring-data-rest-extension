@@ -150,7 +150,7 @@ public class AdvancedSearchControllerTest {
 
         value1 = new HashMap<>();
         value1.put("city", "1");
-        value1.put("street", "CARRER RUPERTO CHAPÍ");
+        value1.put("street", "CARRER RUPERTO CHAPI");
         values = new ArrayList();
         values.add(value1);
         advancedSearch.getOperands().put("or", values);
@@ -160,7 +160,7 @@ public class AdvancedSearchControllerTest {
 
         value1 = new HashMap<>();
         value1.put("city", 1);
-        value1.put("street", "CARRER RUPERTO CHAPÍ");
+        value1.put("street", "CARRER RUPERTO CHAPI");
         values = new ArrayList();
         values.add(value1);
         advancedSearch.getOperands().put("or", values);
@@ -170,7 +170,7 @@ public class AdvancedSearchControllerTest {
 
         value1 = new HashMap<>();
         value1.put("city", "1");
-        value1.put("street", " CARRER RUPERTO CHAPÍ ");
+        value1.put("street", " CARRER RUPERTO CHAPI ");
         advancedSearch.getOperands().put("or", value1);
         jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
         fetch = jpaQueryBase.fetch();
