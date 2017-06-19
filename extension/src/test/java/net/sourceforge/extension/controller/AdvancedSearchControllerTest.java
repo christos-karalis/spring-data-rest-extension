@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.persistence.EntityManager;
@@ -33,8 +34,10 @@ public class AdvancedSearchControllerTest {
     private Repositories repositories;
 
     @Test
-    @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+        @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     public void testOneToOneJoin() throws NoSuchMethodException, NoSuchFieldException, InstantiationException, IllegalAccessException, InvocationTargetException {
         PredicateUtils predicateUtils = new PredicateUtils(repositories, entityManager, Address.class);
         AdvancedSearch advancedSearch = new AdvancedSearch();
@@ -72,8 +75,10 @@ public class AdvancedSearchControllerTest {
     }
 
     @Test
-    @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+        @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     public void testNull() throws NoSuchMethodException, NoSuchFieldException, InstantiationException, IllegalAccessException, InvocationTargetException {
         PredicateUtils predicateUtils = new PredicateUtils(repositories, entityManager, Address.class);
         AdvancedSearch advancedSearch = new AdvancedSearch();
@@ -82,8 +87,10 @@ public class AdvancedSearchControllerTest {
     }
 
     @Test
-    @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+        @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     public void testCollection() throws NoSuchMethodException, NoSuchFieldException, InstantiationException, IllegalAccessException, InvocationTargetException {
         PredicateUtils predicateUtils = new PredicateUtils(repositories, entityManager, Address.class);
         AdvancedSearch advancedSearch = new AdvancedSearch();
@@ -97,8 +104,10 @@ public class AdvancedSearchControllerTest {
 
 
     @Test
-    @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+        @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     public void testActive() throws NoSuchMethodException, NoSuchFieldException, InstantiationException, IllegalAccessException, InvocationTargetException {
         PredicateUtils predicateUtils = new PredicateUtils(repositories, entityManager, Service.class);
         AdvancedSearch advancedSearch = new AdvancedSearch();
@@ -113,8 +122,10 @@ public class AdvancedSearchControllerTest {
     }
 
     @Test
-    @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+        @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     public void testDeepNested() {
         PredicateUtils predicateUtils = new PredicateUtils(repositories, entityManager, Application.class);
         AdvancedSearch advancedSearch = new AdvancedSearch();
@@ -130,8 +141,10 @@ public class AdvancedSearchControllerTest {
     }
 
     @Test
-    @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+        @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     public void testOrInMap() throws NoSuchMethodException, NoSuchFieldException, InstantiationException, IllegalAccessException, InvocationTargetException, ParseException {
         PredicateUtils predicateUtils = new PredicateUtils(repositories, entityManager, Address.class);
         AdvancedSearch advancedSearch = new AdvancedSearch();
@@ -185,8 +198,10 @@ public class AdvancedSearchControllerTest {
     }
 
     @Test
-    @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+        @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     public void testDateMatch() throws NoSuchMethodException, NoSuchFieldException, InstantiationException, IllegalAccessException, InvocationTargetException, ParseException {
         PredicateUtils predicateUtils = new PredicateUtils(repositories, entityManager, Application.class);
         AdvancedSearch advancedSearch = new AdvancedSearch();
@@ -248,8 +263,10 @@ public class AdvancedSearchControllerTest {
     }
 
     @Test
-    @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+        @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     public void testJoinCollection() throws NoSuchMethodException, NoSuchFieldException, InstantiationException, IllegalAccessException, InvocationTargetException, ParseException {
         PredicateUtils predicateUtils = new PredicateUtils(repositories, entityManager, Application.class);
         AdvancedSearch advancedSearch = new AdvancedSearch();
@@ -267,8 +284,10 @@ public class AdvancedSearchControllerTest {
     }
 
     @Test
-    @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+        @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     public void testBigInteger() throws NoSuchMethodException, NoSuchFieldException, InstantiationException, IllegalAccessException, InvocationTargetException, ParseException {
         PredicateUtils predicateUtils = new PredicateUtils(repositories, entityManager, Application.class);
 
@@ -318,8 +337,10 @@ public class AdvancedSearchControllerTest {
     }
 
     @Test
-    @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+        @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     public void testIgnoreNull() throws NoSuchMethodException, NoSuchFieldException, InstantiationException, IllegalAccessException, InvocationTargetException, ParseException {
         PredicateUtils predicateUtils = new PredicateUtils(repositories, entityManager, Application.class);
         AdvancedSearch advancedSearch = new AdvancedSearch();
@@ -337,8 +358,10 @@ public class AdvancedSearchControllerTest {
     }
 
     @Test
-    @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+        @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     public void testNumberMatch() throws NoSuchMethodException, NoSuchFieldException, InstantiationException, IllegalAccessException, InvocationTargetException, ParseException {
         PredicateUtils predicateUtils = new PredicateUtils(repositories, entityManager, Application.class);
         AdvancedSearch advancedSearch = new AdvancedSearch();
