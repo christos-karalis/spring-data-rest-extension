@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.ResponseBody
-import org.springframework.web.multipart.support.DefaultMultipartHttpServletRequest
+import org.springframework.web.multipart.MultipartHttpServletRequest
 
 import javax.persistence.EntityManager
 import javax.persistence.OneToMany
@@ -180,8 +180,9 @@ class AdvancedPostController {
     /**
      * It is an extension of the provided Spring Data Rest {@link org.springframework.data.rest.webmvc.RepositoryEntityController}
      * POST method that it is possible to save in one transaction {@link javax.persistence.OneToMany} additionally its associated
-     * entities on that the entity. It is based on the stored info of {@link Association}
-     * on the application context
+     * entities on that the entity. The main difference is from the standard controller the payload is expected as a multipart
+     * file with name 'payload'. Extra multipart files are expected as properties of the associated entity. Its multipart
+     * file name is matched to the name of the property
      *
      * @param resourceInformation
      * @param repository
@@ -198,13 +199,13 @@ class AdvancedPostController {
                                                                            @PathVariable("repository") String repository,
                                                                            PersistentEntityResourceAssembler assembler)
             throws HttpRequestMethodNotSupportedException, InvocationTargetException, IllegalAccessException, IOException, ClassNotFoundException, ReflectiveOperationException {
-        Map<String, Object> payload = objectMapper.readValue(((DefaultMultipartHttpServletRequest) request).getFile("payload").getInputStream(), Map.class);
+        Map<String, Object> payload = objectMapper.readValue(((MultipartHttpServletRequest) request).getFile("payload").getInputStream(), Map.class);
         Assert.notNull(payload.get(repository), "empty.save");
         Class<?> domainType = resourceInformation.getDomainType();
 
         Object entity = objectMapper.convertValue(payload.get(repository), domainType);
 
-        ((DefaultMultipartHttpServletRequest) request).getFileMap().findAll {!key.equals("payload")}
+        ((MultipartHttpServletRequest) request).getFileMap().findAll {!it.key.equals("payload")}
                 .each { key, value ->
             Object fileEntity = multipartFileProcessor.persistMultipartFile(value);
             entity.hasProperty(key).setProperty(entity, fileEntity)

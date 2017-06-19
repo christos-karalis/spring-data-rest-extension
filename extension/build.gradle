@@ -3,6 +3,7 @@ version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'groovy'
+apply plugin: "jacoco"
 
 ext {
     queryDslVersion = '4.1.0'
@@ -58,6 +59,21 @@ dependencies {
     testCompile group: 'junit',               name: 'junit',                  version:'4.12'
 }
 
+
+jacoco {
+    toolVersion = "0.7.6.201602180812"
+    reportsDir = file("$buildDir/customJacocoReportDir")
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.destination "${buildDir}/jacocoHtml"
+    }
+}
+
+
 clean {
     delete sourceSets.generated.java.srcDirs
 }
@@ -75,6 +91,8 @@ task generateQueryDSL(type: org.gradle.api.tasks.compile.JavaCompile, group: 'bu
 check {
     dependsOn generateQueryDSL
 }
+
+test.mustRunAfter jacocoTestReport
 
 compileTestJava {
     source += sourceSets.generated.java

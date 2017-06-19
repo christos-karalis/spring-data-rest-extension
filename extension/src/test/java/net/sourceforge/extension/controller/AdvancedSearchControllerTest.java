@@ -222,6 +222,29 @@ public class AdvancedSearchControllerTest {
         jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
         fetch = jpaQueryBase.fetch();
         Assert.assertEquals(fetch.size(), 0);
+
+        value = new HashMap<>();
+        value.put("from", simpleDateFormat.parse("01-05-2016"));
+        value.put("to", simpleDateFormat.parse("31-05-2016"));
+        advancedSearch.getOperands().put("submissionDate", value);
+        jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
+        fetch = jpaQueryBase.fetch();
+        Assert.assertEquals(fetch.size(), 1);
+
+        value = new HashMap<>();
+        value.put("from", simpleDateFormat.parse("06-05-2016"));
+        value.put("to", simpleDateFormat.parse("31-05-2016"));
+        advancedSearch.getOperands().put("submissionDate", value);
+        jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
+        fetch = jpaQueryBase.fetch();
+        Assert.assertEquals(fetch.size(), 0);
+
+        value = new HashMap<>();
+        advancedSearch.getOperands().put("submissionDate", value);
+        jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
+        fetch = jpaQueryBase.fetch();
+        Assert.assertEquals(fetch.size(), 2);
+
     }
 
     @Test
@@ -275,12 +298,12 @@ public class AdvancedSearchControllerTest {
 
     }
 
-    private void check(PredicateUtils predicateUtils, String quantityBigInteger, Object checkedValue) {
+    private void check(PredicateUtils predicateUtils, String property, Object checkedValue) {
         AdvancedSearch advancedSearch = new AdvancedSearch();
 
         HashMap<Object, Object> value = new HashMap<>();
         value.put("from", checkedValue);
-        advancedSearch.getOperands().put(quantityBigInteger, value);
+        advancedSearch.getOperands().put(property, value);
         JPAQueryBase jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
         List fetch = jpaQueryBase.fetch();
         Assert.assertEquals(fetch.size(), 1);
@@ -288,7 +311,7 @@ public class AdvancedSearchControllerTest {
         value = new HashMap<>();
         value.put("to", checkedValue);
         advancedSearch.getOperands().clear();
-        advancedSearch.getOperands().put(quantityBigInteger, value);
+        advancedSearch.getOperands().put(property, value);
         jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
         fetch = jpaQueryBase.fetch();
         Assert.assertEquals(fetch.size(), 1);

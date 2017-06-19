@@ -7,12 +7,17 @@ import org.junit.runner.RunWith;
 import org.hamcrest.Matchers;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
 
 /**
  * Created by christos.karalis on 6/10/2017.
@@ -94,4 +99,21 @@ public class AdvancedPostControllerTest extends AbstractControllerTest {
 
     }
 
+
+    @Sql(scripts = "classpath:services.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @Test
+    public void testPostFile() throws Exception {
+        InputStream fi1 = new ByteArrayInputStream(new String("text").getBytes());
+        MockMultipartFile upload = new MockMultipartFile("upload", "file.txt", "multipart/form-data", fi1);
+
+        InputStream payload = new ByteArrayInputStream(new String("{ \"application\" : { \"id\" : 1, \"applicant\" : \""+applicant1+"\"}, \"orderLines\" : [{ \"quantity\" : 2, \"service\" : \"http://localhost/service/1\"}] }").getBytes());
+        MockMultipartFile uploadPayload = new MockMultipartFile("payload", "payload.json", "multipart/form-data", payload);
+
+
+        ResultActions post = upload("/application/advanced", upload, uploadPayload);
+        post.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED.value()));
+
+        System.out.println(getAndRespond("/application/1").andReturn().getResponse().getContentAsString());
+    }
 }

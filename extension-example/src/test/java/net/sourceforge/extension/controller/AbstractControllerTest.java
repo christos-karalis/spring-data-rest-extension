@@ -5,10 +5,12 @@ import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -53,6 +55,14 @@ public class AbstractControllerTest {
 
     protected ResultActions post(String content, String urlTemplate) throws Exception {
         return mockMvc.perform(MockMvcRequestBuilders.post(urlTemplate).content(content).header("Content-type", "application/json").session(mockHttpSession));
+    }
+
+    protected ResultActions upload(String urlTemplate, MockMultipartFile ... files) throws Exception {
+        MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.fileUpload(urlTemplate);
+        for (MockMultipartFile file : files) {
+            builder.file(file);
+        }
+        return mockMvc.perform(builder.session(mockHttpSession));
     }
 
     protected MockHttpServletResponse patchAndRespond(String content, String urlTemplate) throws Exception {

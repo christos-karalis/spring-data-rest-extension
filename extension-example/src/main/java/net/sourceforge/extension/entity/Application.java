@@ -17,6 +17,9 @@ public class Application {
     @Column(name = "SUBMISSION_DATE")
     private Date submissionDate;
 
+    @Column
+    private byte[] upload;
+
     @ManyToOne
     @JoinColumn(name = "APPLICANT_ID")
     private Applicant applicant;
@@ -38,6 +41,14 @@ public class Application {
 
     public void setSubmissionDate(Date submissionDate) {
         this.submissionDate = submissionDate;
+    }
+
+    public byte[] getUpload() {
+        return upload;
+    }
+
+    public void setUpload(byte[] upload) {
+        this.upload = upload;
     }
 
     public Applicant getApplicant() {

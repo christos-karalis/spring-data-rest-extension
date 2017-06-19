@@ -94,24 +94,20 @@ public class PredicateUtils {
         Map<Path, Path> joins = new LinkedHashMap<>()
         parseMapForJoins(entityPath, advancedSearch.getOperands(), joins, expressions)
         JPAQueryBase query = new JPAQuery(em).from(entityPath)
-        for (Map.Entry<Path, Path> join : joins.entrySet()) {
-            if (join.getValue() instanceof CollectionExpression) {
-                query = query.leftJoin((CollectionExpression) join.getValue(), join.getKey());
-            } else if (join.getValue() instanceof  EntityPath) {
-                query = query.leftJoin((EntityPath) join.getValue(), join.getKey());
+        joins.findAll { key, value ->
+            if (value instanceof CollectionExpression) {
+                query = query.leftJoin((CollectionExpression) value, key);
+            } else if (value instanceof  EntityPath) {
+                query = query.leftJoin((EntityPath) value, key);
             }
         }
 
         if (!expressions.isEmpty()) {
             BooleanExpression expression = expressions.get(0);
             if (advancedSearch.getOperator().equals(AdvancedSearch.Operator.AND)) {
-                for (int i = 1; i < expressions.size(); i++) {
-                    expression = expression.and(expressions.get(i));
-                }
+                expressions.each { expression = expression.and(it) }
             } else {
-                for (int i = 1; i < expressions.size(); i++) {
-                    expression = expression.or(expressions.get(i));
-                }
+                expressions.each { expression = expression.or(it) }
             }
             if (idActualType in Base64Convertable) {
                 query.where(expression);
@@ -196,20 +192,16 @@ public class PredicateUtils {
                 TemporalExpression to = getDatePath(entityPath, (String) ((Map) value).get(Constants.DATE_TO));
                 Date current = new Date();
                 if (from!=null && to!=null) {
-                    def and = from.before(current).and(to.after(current).or(to.isNull()))
-                    expressions.add(and)
+                    expressions.add(from.before(current).and(to.after(current).or(to.isNull())))
                 }
             } else if (key in [Constants.OR, Constants.AND] && value instanceof Map) {
                 List<BooleanExpression> orExpressions = new ArrayList<BooleanExpression>();
                 parseMapForJoins(entityPath, (Map<String, Object>) value, joins, orExpressions);
                 if (!orExpressions.isEmpty()) {
-                    BooleanExpression expression = orExpressions.get(0);
+                    BooleanExpression expression = orExpressions.get(0)
                     for (int i = 1; i < orExpressions.size(); i++) {
-                        if (key.equals(Constants.OR)) {
-                            expression = expression.or(orExpressions.get(i));
-                        } else {
-                            expression = expression.and(orExpressions.get(i));
-                        }
+                        expression = Constants.OR.equals(key)?
+                                    expression.or(orExpressions.get(i)):expression.and(orExpressions.get(i))
                     }
                     expressions << expression
                 }
@@ -305,7 +297,7 @@ public class PredicateUtils {
      * @throws IllegalAccessException
      * @throws NoSuchFieldException
      */
-    public BooleanExpression matchToEntityId(EntityPath entityPath, MetaProperty property, Collection<String> values) {
+    public BooleanExpression matchToEntityId(EntityPath entityPath, MetaProperty property, Collection values) {
         if (((ParameterizedType) property.getType().getGenericSuperclass()).getActualTypeArguments().length > 0) {
             Type clazz = ((ParameterizedType) property.getType().getGenericSuperclass()).getActualTypeArguments()[0];
             String propertyId = repositories.getPersistentEntity((Class) clazz).getIdProperty().getName();
@@ -316,17 +308,16 @@ public class PredicateUtils {
                                 (NumberPath) propertyIdField:null
             boolean addedNull = false
             boolean addedNotNull = false
-            Collection<Object> matchedIds = new ArrayList<Object>();
-            for (String value : values) {
-                if (!(value in [Constants.ISNULL, Constants.ISNOTNULL])) {
-                    String id  = checkIfUrlAndParse(value)
+            Collection<Object> matchedIds = new ArrayList<Object>()
+            values.each {
+                if (!(it in [Constants.ISNULL, Constants.ISNOTNULL])) {
+                    String id  = checkIfUrlAndParse(it.toString())
                     matchedIds.add(propertyIdField in StringPath ? id :
                             (propertyIdField in NumberPath ?
                                     getValueOf((NumberPath) propertyIdField, id) : null))
-
                 } else {
-                    Constants.ISNULL.equals(value)&&(addedNull=true) ||
-                            Constants.ISNOTNULL.equals(value)&&(addedNotNull=true)
+                    Constants.ISNULL.equals(it)&&(addedNull=true) ||
+                            Constants.ISNOTNULL.equals(it)&&(addedNotNull=true)
                 }
             }
             if (object!=null) {
