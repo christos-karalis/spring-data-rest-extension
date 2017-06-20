@@ -3,6 +3,7 @@ version '1.0-SNAPSHOT'
 
 allprojects {
     apply plugin: 'jacoco'
+    apply plugin: 'groovy'
 }
 
 apply plugin: 'war'
@@ -79,13 +80,16 @@ task codeCoverageReport(type: JacocoReport) {
     executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
 
     subprojects.each {
+        println it.sourceSets.main
         sourceSets it.sourceSets.main
     }
+
+    println sourceSets
 
     reports {
         xml.enabled true
         xml.destination "${buildDir}/reports/jacoco/report.xml"
-        html.enabled false
+        html.enabled true
         csv.enabled false
     }
 }
@@ -96,5 +100,4 @@ codeCoverageReport.dependsOn {
 
 compileTestJava {
     source += sourceSets.generated.java
-
 }

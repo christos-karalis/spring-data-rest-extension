@@ -75,6 +75,10 @@ check {
     dependsOn generateQueryDSL
 }
 
+test {
+    dependsOn generateQueryDSL
+}
+
 compileTestJava {
     source += sourceSets.generated.java
 }
