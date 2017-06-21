@@ -10,6 +10,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.ResultActions;
@@ -32,6 +33,9 @@ public class AdvancedPostControllerTest extends AbstractControllerTest {
     private String applicant1 = "http://localhost/applicant/1";
     private String applicant2 = "http://localhost/applicant/2";
 
+    @SqlGroup({
+            @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void testPost() throws Exception {
@@ -63,8 +67,10 @@ public class AdvancedPostControllerTest extends AbstractControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("page.totalElements", Matchers.is(2)));
     }
 
-    @Sql(scripts = "classpath:services.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+            @Sql(scripts = "classpath:services.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+            @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     @Test
     public void testAssociation() throws Exception {
         ResultActions post = post("{ \"application\" : { \"id\" : 1, \"applicant\" : \""+applicant1+"\"}, \"orderLines\" : [{ \"quantity\" : 2, \"service\" : \"http://localhost/service/1\"}] }", "/application/advanced");
@@ -100,8 +106,10 @@ public class AdvancedPostControllerTest extends AbstractControllerTest {
     }
 
 
-    @Sql(scripts = "classpath:services.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @SqlGroup({
+            @Sql(scripts = "classpath:services.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+            @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
     @Test
     public void testPostFile() throws Exception {
         InputStream fi1 = new ByteArrayInputStream(new String("text").getBytes());
@@ -116,4 +124,25 @@ public class AdvancedPostControllerTest extends AbstractControllerTest {
 
         System.out.println(getAndRespond("/application/1").andReturn().getResponse().getContentAsString());
     }
+
+
+    @SqlGroup({
+        @Sql(scripts = "classpath:items.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(scripts = "classpath:drop-items.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
+    @Test
+    public void testAssociationGetter() throws Exception {
+        ResultActions post = post("{ \"basket\" : { \"id\" : 1}, \"items\" : [{ \"quantity\" : 2, \"item\" : \"http://localhost/item/1\"}] }", "/basket/advanced");
+        post.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED.value()));
+
+        post = post("{ \"operator\" : \"AND\" }", "/basket/search/advanced");
+        post.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
+                .andExpect(MockMvcResultMatchers.jsonPath("page.totalElements", Matchers.is(1)));
+
+        getAndRespond("/basket/1/items")
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
+                .andExpect(MockMvcResultMatchers.jsonPath("_embedded.basketItems[0].quantity", Matchers.is(2)));
+
+    }
+
 }

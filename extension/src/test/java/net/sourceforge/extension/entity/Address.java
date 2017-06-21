@@ -10,14 +10,17 @@ public class Address {
 
     @Id
     @Column(name = "ADDRESS_ID")
-    Long id;
+    private Long id;
     @ManyToOne
     @JoinColumn(name = "CITY_ID")
-    City city;
+    private City city;
     @Column
-    String street;
+    private String street;
     @Column
-    String number;
+    private String number;
+    @Column
+    private Boolean verified;
+
 
     public Long getId() {
         return id;
@@ -49,5 +52,13 @@ public class Address {
 
     public void setNumber(String number) {
         this.number = number;
+    }
+
+    public Boolean getVerified() {
+        return verified;
+    }
+
+    public void setVerified(Boolean verified) {
+        this.verified = verified;
     }
 }

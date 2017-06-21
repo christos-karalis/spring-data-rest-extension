@@ -417,9 +417,11 @@ public class PredicateUtils {
 
     private BooleanExpression generateExpression(final BooleanPath matchedPath, Object matcher) throws IllegalAccessException {
         if (matcher instanceof String) {
-            Boolean b = BooleanUtils.toBooleanObject(matcher, "true", "false", null)
+            Boolean b = BooleanUtils.toBooleanObject(matcher, "true", "false", Constants.ISNULL)
             if (b!=null) {
                 return matchedPath.eq(b)
+            } else {
+                return matchedPath.isNull()
             }
         }
         return null;

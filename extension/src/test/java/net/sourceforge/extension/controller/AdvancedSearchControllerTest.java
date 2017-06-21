@@ -140,6 +140,69 @@ public class AdvancedSearchControllerTest {
 
     }
 
+
+    @Test
+    @SqlGroup({
+            @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+            @Sql(scripts = "classpath:drop.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    })
+    public void testBoolean() throws NoSuchMethodException, NoSuchFieldException, InstantiationException, IllegalAccessException, InvocationTargetException, ParseException {
+        PredicateUtils predicateUtils = new PredicateUtils(repositories, entityManager, Application.class);
+        AdvancedSearch advancedSearch = new AdvancedSearch();
+
+        HashMap<String, Object> value = new HashMap<>();
+        HashMap<String, Object> verified = new HashMap<>();
+        value.put("address", verified);
+        verified.put("verified", true);
+
+        advancedSearch.setOperands(value);
+        JPAQueryBase jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
+        List fetch = jpaQueryBase.fetch();
+        Assert.assertEquals(fetch.size(), 1);
+
+        verified.put("verified", "true");
+
+        advancedSearch.setOperands(value);
+        jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
+        fetch = jpaQueryBase.fetch();
+        Assert.assertEquals(fetch.size(), 1);
+
+        verified.put("verified", "isNull");
+
+        advancedSearch.setOperands(value);
+        jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
+        fetch = jpaQueryBase.fetch();
+        Assert.assertEquals(fetch.size(), 1);
+
+        verified.put("verified", false);
+
+        advancedSearch.setOperands(value);
+        jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
+        fetch = jpaQueryBase.fetch();
+        Assert.assertEquals(fetch.size(), 0);
+
+        verified.put("verified", "false");
+
+        advancedSearch.setOperands(value);
+        jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
+        fetch = jpaQueryBase.fetch();
+        Assert.assertEquals(fetch.size(), 0);
+
+        verified.put("verified", null);
+
+        advancedSearch.setOperands(value);
+        jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
+        fetch = jpaQueryBase.fetch();
+        Assert.assertEquals(fetch.size(), 2);
+
+        verified.put("verified", "");
+
+        advancedSearch.setOperands(value);
+        jpaQueryBase = predicateUtils.generateQuery(advancedSearch);
+        fetch = jpaQueryBase.fetch();
+        Assert.assertEquals(fetch.size(), 2);
+    }
+
     @Test
     @SqlGroup({
         @Sql(scripts = "classpath:addresses.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
