@@ -24,7 +24,7 @@ public class BasketItem {
     @EmbeddedId
     @AttributeOverrides({
             @AttributeOverride(name = "itemId", column = @Column(name = "ITEM_ID")),
-            @AttributeOverride(name = "itemId", column = @Column(name = "BASKET_ID"))
+            @AttributeOverride(name = "basketId", column = @Column(name = "BASKET_ID"))
     })
     public BasketItemId getId() {
         return id;

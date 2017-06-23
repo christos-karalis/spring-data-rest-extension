@@ -143,6 +143,40 @@ public class AdvancedPostControllerTest extends AbstractControllerTest {
                 .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
                 .andExpect(MockMvcResultMatchers.jsonPath("_embedded.basketItems[0].quantity", Matchers.is(2)));
 
+
+        post = patch("{ \"items\" : [{ \"quantity\" : 1, \"item\" : \"http://localhost/item/1\"}, { \"quantity\" : 1, \"item\" : \"http://localhost/item/2\"}] }", "/basket/advanced/1");
+        post.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED.value()));
+
+        getAndRespond("/basket/1/items")
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
+                .andExpect(MockMvcResultMatchers.jsonPath("_embedded.basketItems", Matchers.hasSize(2)))
+                .andExpect(MockMvcResultMatchers.jsonPath("_embedded.basketItems[0].quantity", Matchers.is(1)))
+                .andExpect(MockMvcResultMatchers.jsonPath("_embedded.basketItems[1].quantity", Matchers.is(1)));
+
+        post = patch("{ \"items\" : [] }", "/basket/advanced/1");
+        post.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED.value()));
+
+        getAndRespond("/basket/1/items")
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
+                .andExpect(MockMvcResultMatchers.jsonPath("_embedded.basketItems", Matchers.hasSize(0)));
+
+
+        post = patch("{ \"items\" : [{ \"quantity\" : 1, \"item\" : \"http://localhost/item/3\"}, { \"quantity\" : 1, \"item\" : \"http://localhost/item/2\"}] }", "/basket/advanced/1");
+        post.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED.value()));
+
+        getAndRespond("/basket/1/items")
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
+                .andExpect(MockMvcResultMatchers.jsonPath("_embedded.basketItems", Matchers.hasSize(2)))
+                .andExpect(MockMvcResultMatchers.jsonPath("_embedded.basketItems[0].quantity", Matchers.is(1)))
+                .andExpect(MockMvcResultMatchers.jsonPath("_embedded.basketItems[1].quantity", Matchers.is(1)));
+
+        post = patch("{ \"items\" : [{ \"quantity\" : 1, \"item\" : \"http://localhost/item/2\"}] }", "/basket/advanced/1");
+        post.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED.value()));
+
+        getAndRespond("/basket/1/items")
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
+                .andExpect(MockMvcResultMatchers.jsonPath("_embedded.basketItems", Matchers.hasSize(1)))
+                .andExpect(MockMvcResultMatchers.jsonPath("_embedded.basketItems[0].quantity", Matchers.is(1)));
     }
 
 }
