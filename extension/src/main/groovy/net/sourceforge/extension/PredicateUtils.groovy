@@ -96,18 +96,18 @@ public class PredicateUtils {
         JPAQueryBase query = new JPAQuery(em).from(entityPath)
         joins.findAll { key, value ->
             if (value instanceof CollectionExpression) {
-                query = query.leftJoin((CollectionExpression) value, key);
+                query = query.leftJoin((CollectionExpression) value, key).fetchJoin();
             } else if (value instanceof  EntityPath) {
-                query = query.leftJoin((EntityPath) value, key);
+                query = query.leftJoin((EntityPath) value, key).fetchJoin();
             }
         }
 
         if (!expressions.isEmpty()) {
             BooleanExpression expression = expressions.get(0);
             if (advancedSearch.getOperator().equals(AdvancedSearch.Operator.AND)) {
-                expressions.each { expression = expression.and(it) }
+                expressions.eachWithIndex { it, index -> if (index>0) expression = expression.and(it) }
             } else {
-                expressions.each { expression = expression.or(it) }
+                expressions.eachWithIndex { it, index -> if (index>0) expression = expression.or(it) }
             }
             if (idActualType in Base64Convertable) {
                 query.where(expression);
@@ -141,7 +141,7 @@ public class PredicateUtils {
             def property = entityPath.hasProperty(key)
             if (property) {
                 BooleanExpression expression
-                if (value instanceof String && StringUtils.isNotBlank(value)) {
+                if (value in String && StringUtils.isNotBlank(value)) {
                     ((property.getType() in StringPath
                             && (expression = ((StringPath) property.getProperty(entityPath)).trim().containsIgnoreCase(value.trim()))) ||
                     (property.getType() in BooleanPath
@@ -161,7 +161,7 @@ public class PredicateUtils {
                 } else if (value in Number && property.getType().getGenericSuperclass() instanceof ParameterizedType &&
                         property.getType() in EntityPathBase)  {
                     (expression = matchToEntityId(entityPath, property, ((Number) value).toString())) && expressions << expression
-                } else if (value instanceof Map) {
+                } else if (value in Map) {
                     if (property.getProperty(entityPath) in CollectionPathBase) {
                         addCollectionJoinAndParse(entityPath, joins, expressions, value, property)
                     } else if (property.getType() in EntityPathBase) {
@@ -235,9 +235,7 @@ public class PredicateUtils {
                     }
                 }
             }
-
         }
-
     }
 
     private static Date parseDate(Date value) { value }
@@ -252,6 +250,7 @@ public class PredicateUtils {
     private BigDecimal parseNumber(String o) { return new BigDecimal(o) }
     private BigDecimal parseNumber(Double o) { return new BigDecimal((Double) o) }
     private BigDecimal parseNumber(Integer o) { return new BigDecimal((Integer) o) }
+    private BigDecimal parseNumber(BigDecimal o) { return o }
     private BigDecimal parseNumber(Object o) { return null }
 
     /**
